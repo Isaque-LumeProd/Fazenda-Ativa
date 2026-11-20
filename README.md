@@ -1,56 +1,47 @@
-# Welcome to your Expo app 👋
+# Fazenda Ativa: gestão de avicultura
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+App para iPhone e computador (navegador) que organiza galinheiros, lotes de aves, ração, água, vitaminas, vacinas, coleta de ovos, mortalidade e tarefas da rotina.
 
-## Get started
+Feito com **Expo (React Native) + Expo Router**. Os dados ficam salvos no próprio aparelho e o app funciona sem internet.
 
-1. Install dependencies
+As telas e o modelo de dados estão descritos em [docs/TELAS.md](docs/TELAS.md).
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Rodar
 
 ```bash
-npm run reset-project
+npm install
+npx expo start
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+- **Computador:** aperte `w` no terminal (ou rode `npx expo start --web`) e o app abre no navegador em http://localhost:8081
+- **iPhone:** instale o app **Expo Go** pela App Store e escaneie o QR code que aparece no terminal com a câmera. O iPhone e o computador precisam estar na mesma rede Wi-Fi.
 
-### Other setup steps
+Na primeira vez, toque em **"Ver com dados de exemplo"** para explorar o app com uma fazenda fictícia.
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## Estrutura
 
-## Learn more
+```
+src/
+  app/                 telas (cada arquivo é uma rota)
+    (tabs)/            abas: Início, Galinheiros, Registros, Estoque, Tarefas
+    galinheiro/        detalhe e formulário de galinheiro
+    lote/              detalhe e formulário de lote
+    manejo/novo.tsx    registrar manejo
+    estoque/           detalhe e formulário de item
+    tarefa/form.tsx    criar/editar tarefa
+    config.tsx         configurações
+  components/          componentes visuais reutilizáveis
+  lib/
+    types.ts           modelo de dados
+    store.ts           estado + persistência offline (zustand + AsyncStorage)
+    calc.ts            regras de negócio (aves atuais, consumo, postura…)
+    constants.ts       tipos de ave, tipos de manejo, categorias
+    seed.ts            dados de exemplo
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+## Verificação
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+npx tsc --noEmit
+npx expo lint
+```

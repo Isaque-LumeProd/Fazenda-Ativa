@@ -1,18 +1,38 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme } from 'react-native';
+import { DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { ActivityIndicator, View } from 'react-native';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+import { C } from '@/constants/theme';
+import { useStore } from '@/lib/store';
 
-SplashScreen.preventAutoHideAsync();
+const tema = {
+  ...DefaultTheme,
+  colors: { ...DefaultTheme.colors, primary: C.primary, background: C.bg, card: C.card, text: C.text, border: C.border },
+};
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+export default function RootLayout() {
+  const hidratado = useStore((s) => s.hidratado);
+
+  if (!hidratado) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: C.bg }}>
+        <ActivityIndicator color={C.primary} size="large" />
+      </View>
+    );
+  }
+
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
+    <ThemeProvider value={tema}>
+      <StatusBar style="dark" />
+      <Stack
+        screenOptions={{
+          headerTintColor: C.primary,
+          headerTitleStyle: { color: C.text },
+          headerBackTitle: 'Voltar',
+          contentStyle: { backgroundColor: C.bg },
+        }}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false, title: 'Início' }} />
+      </Stack>
     </ThemeProvider>
   );
 }

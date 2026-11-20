@@ -1,0 +1,18 @@
+{
+  "name": "AgroRancho — Gestão de Fazenda e Rancho",
+  "short_name": "AgroRancho",
+  "description": "Controle completo de animais (Nelores, vacas, galinhas, pintinhos), ração, troca de água e vitaminas no iPhone e computador.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F4F6F2",
+  "theme_color": "#1B5E3A",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+# Banco de dados local SQLite
+data/
+*.db
+*.db-wal
+*.db-shm
+
+# Dependências e logs
+node_modules/
+*.log
+npm-debug.log*
+
+# Sistema
+.DS_Store
+Thumbs.db

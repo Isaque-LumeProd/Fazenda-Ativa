@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#1B5E3A" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="AgroRancho" />
+  <link rel="apple-touch-icon" href="/icon.svg" />
+  <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+  <link rel="manifest" href="/manifest.json" />
+  <title>AgroRancho — Gestão de Fazenda &amp; Rancho</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div id="device-stage" class="device-stage">
+    <div id="iphone-chrome-top" class="iphone-chrome-top hidden">
+      <div class="iphone-notch"></div>
+    </div>
+
+    <div id="app-shell" class="app-shell">
+      <!-- Sidebar Desktop -->
+      <aside class="sidebar">
+        <div class="brand-box">
+          <div class="brand-icon">🌾</div>
+          <div>
+            <div class="brand-title">AgroRancho</div>
+            <div class="brand-subtitle" id="sidebar-farm-name">Carregando rancho...</div>
+          </div>
+        </div>
+
+        <nav class="sidebar-nav" aria-label="Menu principal">
+          <button class="nav-btn active" data-tab="hoje">
+            <span class="nav-ico">🏠</span>
+            <span>Hoje no Rancho</span>
+            <span class="nav-badge hidden" id="badge-hoje">0</span>
+          </button>
+          <button class="nav-btn" data-tab="animais">
+            <span class="nav-ico">🐄</span>
+            <span>Meus Animais</span>
+          </button>
+          <button class="nav-btn" data-tab="racao">
+            <span class="nav-ico">🌽</span>
+            <span>Ração &amp; Estoque</span>
+            <span class="nav-badge warn hidden" id="badge-racao">!</span>
+          </button>
+          <button class="nav-btn" data-tab="agua-vitaminas">
+            <span class="nav-ico">💧</span>
+            <span>Água &amp; Vitaminas</span>
+            <span class="nav-badge hidden" id="badge-agua">0</span>
+          </button>
+          <button class="nav-btn" data-tab="campo">
+            <span class="nav-ico">👷</span>
+            <span>Modo Campo (Peão)</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="operator-card">
+            <label for="operator-select">Operando como:</label>
+            <select id="operator-select" class="operator-select"></select>
+          </div>
+          <button id="btn-open-farm-modal" class="btn btn-outline btn-sm btn-block">⚙️ Dados da Fazenda</button>
+          <button id="btn-connect-iphone" class="btn btn-secondary btn-sm btn-block">📱 Abrir no iPhone</button>
+        </div>
+      </aside>
+
+      <!-- Área Principal -->
+      <div class="main-area">
+        <header class="topbar">
+          <div class="topbar-left">
+            <div class="mobile-brand">
+              <span class="mobile-brand-ico">🌾</span>
+              <div>
+                <div class="mobile-brand-title" id="topbar-farm-name">AgroRancho</div>
+                <div class="mobile-brand-sub" id="topbar-date">Hoje</div>
+              </div>
+            </div>
+            <h1 id="page-title" class="desktop-title">Hoje no Rancho</h1>
+          </div>
+
+          <div class="topbar-actions">
+            <div id="sync-status-pill" class="status-pill online" title="Estado de conexão e fila offline">
+              <span class="dot"></span>
+              <span id="sync-status-text">Online</span>
+            </div>
+            <button id="btn-sync-now" class="btn btn-warning btn-sm hidden">🔄 Sincronizar (<span id="offline-count">0</span>)</button>
+            <button id="btn-toggle-iphone-preview" class="btn btn-outline btn-sm desktop-only">📱 Simular Tela iPhone</button>
+            <button id="btn-mobile-operator" class="btn btn-outline btn-sm mobile-only">👷 <span id="mobile-operator-label">Dono</span></button>
+            <button id="btn-mobile-iphone-help" class="btn btn-outline btn-sm mobile-only">📲 App</button>
+          </div>
+        </header>
+
+        <main id="main-content" class="main-content">
+          <!-- Conteúdo dinâmico renderizado via app.js -->
+        </main>
+      </div>
+
+      <!-- Barra Inferior iOS / Mobile -->
+      <nav class="bottom-nav" aria-label="Navegação móvel">
+        <button class="bottom-btn active" data-tab="hoje">
+          <span class="b-ico">🏠</span>
+          <span class="b-txt">Hoje</span>
+        </button>
+        <button class="bottom-btn" data-tab="animais">
+          <span class="b-ico">🐄</span>
+          <span class="b-txt">Animais</span>
+        </button>
+        <button class="bottom-btn" data-tab="racao">
+          <span class="b-ico">🌽</span>
+          <span class="b-txt">Ração</span>
+        </button>
+        <button class="bottom-btn" data-tab="agua-vitaminas">
+          <span class="b-ico">💧</span>
+          <span class="b-txt">Água/Vit.</span>
+        </button>
+        <button class="bottom-btn" data-tab="campo">
+          <span class="b-ico">👷</span>
+          <span class="b-txt">Campo</span>
+        </button>
+      </nav>
+    </div>
+
+    <div id="iphone-chrome-bottom" class="iphone-chrome-bottom hidden">
+      <div class="iphone-home-bar"></div>
+    </div>
+  </div>
+
+  <!-- Modal Genérico Reutilizável -->
+  <div id="modal-backdrop" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="modal-title">Título</h2>
+        <button id="modal-close" class="icon-close" aria-label="Fechar">✕</button>
+      </div>
+      <div id="modal-body" class="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Toast de Notificações -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

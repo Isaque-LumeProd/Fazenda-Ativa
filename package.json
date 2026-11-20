@@ -1,0 +1,20 @@
+{
+  "name": "agrogestao-saas",
+  "version": "1.0.0",
+  "description": "SaaS de gestão de manejo para fazenda e rancho (iPhone PWA + Computador)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test-api.js"
+  },
+  "keywords": [
+    "fazenda",
+    "rancho",
+    "agro",
+    "manejo",
+    "nelore",
+    "aves",
+    "pwa"
+  ],
+  "license": "MIT"
+}

@@ -24,7 +24,8 @@ Barra inferior com 5 abas + telas empilhadas por cima.
 | Detalhe do item de estoque (compra, ajuste, movimentações) | `/estoque/[id]` |
 | Cadastrar / editar item de estoque | `/estoque/form?id=` |
 | Cadastrar / editar tarefa | `/tarefa/form?id=` |
-| Configurações (dados de exemplo, apagar dados) | `/config` |
+| Configurações (fazenda, código de convite, equipe, sincronização, sair; sem conta: dados de exemplo e apagar dados) | `/config` |
+| Entrar / criar conta e criar ou entrar na fazenda (só aparece com a nuvem ligada) | `/conta` |
 | **Modo Campo** (tela simples para o funcionário: trato do dia, tarefas com botões grandes, registros rápidos, feito hoje) | `/campo` |
 
 ## Modelo de dados
@@ -32,7 +33,7 @@ Barra inferior com 5 abas + telas empilhadas por cima.
 - **Galinheiro**: nome, capacidade, observações
 - **Lote**: galinheiro, tipo de ave (poedeira, corte, caipira, pintinho, reprodutor), raça, quantidade inicial, data de entrada, idade na entrada, consumo de ração (g/ave/dia), ativo
 - **Manejo**: tipo (ração, água, vitamina, vacina, medicamento, coleta de ovos, mortalidade, venda, entrada de aves, limpeza, pesagem), data, lote/galinheiro, item de estoque, quantidade, ovos quebrados, valor, peso médio, observação
-- **Item de estoque**: nome, categoria, unidade, quantidade, estoque mínimo, custo unitário
+- **Item de estoque**: nome, categoria, unidade, estoque mínimo, custo unitário (informado à mão), peso do saco. O **saldo não é gravado**: é a soma das movimentações (por isso baixas em aparelhos diferentes nunca se sobrescrevem). O custo atual é o da compra mais recente ou o informado à mão, o que for mais novo
 - **Movimentação de estoque**: entrada (compra), saída (gerada pelo manejo) ou ajuste
 - **Tarefa**: título, tipo de manejo, galinheiro/lote, frequência em dias, horário, próxima data, item e quantidade padrão
 

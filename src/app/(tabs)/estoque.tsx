@@ -3,18 +3,21 @@ import { View } from 'react-native';
 
 import { Badge, Button, Card, Empty, ListItem, Row, Screen, Section, Txt } from '@/components/ui';
 import { C, S } from '@/constants/theme';
+import { usePermissoes } from '@/lib/conta';
 import { consumoDaRacao, consumoTotalKg, custoRacaoDia, estoqueRacaoKg, sacosRestantes } from '@/lib/calc';
 import { CATEGORIAS_ITEM } from '@/lib/constants';
 import { fmtMoeda, fmtNum, fmtQtd } from '@/lib/format';
+import { useItens } from '@/lib/hooks';
 import { useStore } from '@/lib/store';
 import type { CategoriaItem } from '@/lib/types';
 
 const ORDEM: CategoriaItem[] = ['racao', 'vitamina', 'vacina', 'medicamento', 'outros'];
 
 export default function Estoque() {
-  const itens = useStore((s) => s.itens);
+  const itens = useItens();
   const lotes = useStore((s) => s.lotes);
   const manejos = useStore((s) => s.manejos);
+  const { editarCadastros } = usePermissoes();
 
   const racaoKg = estoqueRacaoKg(itens);
   const consumoKg = consumoTotalKg(lotes, manejos);
@@ -22,7 +25,7 @@ export default function Estoque() {
   const custoDia = custoRacaoDia(itens, lotes, manejos);
 
   return (
-    <Screen footer={<Button title="Novo item" icon="plus" onPress={() => router.push('/estoque/form')} />}>
+    <Screen footer={editarCadastros ? <Button title="Novo item" icon="plus" onPress={() => router.push('/estoque/form')} /> : undefined}>
       <Card style={{ gap: S.sm, backgroundColor: C.primarySoft, borderColor: C.primarySoft }}>
         <Txt v="label" style={{ color: C.primaryDark }}>
           Previsão de ração

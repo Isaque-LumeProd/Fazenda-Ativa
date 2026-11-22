@@ -2,7 +2,7 @@
 
 App para iPhone e computador (navegador) que organiza galinheiros, lotes de aves, ração, água, vitaminas, vacinas, coleta de ovos, mortalidade e tarefas da rotina.
 
-Feito com **Expo (React Native) + Expo Router**. Os dados ficam salvos no próprio aparelho e o app funciona sem internet.
+Feito com **Expo (React Native) + Expo Router**. O app funciona sem internet e, com a nuvem ligada (Supabase), sincroniza os dados entre o dono e os funcionários da fazenda. Veja como ligar em [docs/NUVEM.md](docs/NUVEM.md); sem essa configuração, os dados ficam só no aparelho.
 
 As telas e o modelo de dados estão descritos em [docs/TELAS.md](docs/TELAS.md).
 
@@ -44,4 +44,5 @@ src/
 ```bash
 npx tsc --noEmit
 npx expo lint
+npm run test:nuvem   # regras de permissão + sincronização (Postgres em memória)
 ```

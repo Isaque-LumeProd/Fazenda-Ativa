@@ -9,6 +9,7 @@ import { brParaYMD, fmtData, hoje } from '@/lib/dates';
 import { confirmar } from '@/lib/dialog';
 import { numParaTexto, parseNum } from '@/lib/format';
 import { voltar } from '@/lib/nav';
+import { useItens } from '@/lib/hooks';
 import { useStore } from '@/lib/store';
 import type { TipoAve } from '@/lib/types';
 
@@ -16,7 +17,7 @@ export default function LoteForm() {
   const params = useLocalSearchParams<{ id?: string; galinheiroId?: string }>();
   const existente = useStore((s) => s.lotes.find((l) => l.id === params.id));
   const galinheiros = useStore((s) => s.galinheiros);
-  const todosItens = useStore((s) => s.itens);
+  const todosItens = useItens();
   const racoes = todosItens.filter((i) => i.categoria === 'racao');
   const salvar = useStore((s) => s.salvarLote);
   const excluir = useStore((s) => s.excluirLote);

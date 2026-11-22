@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 
 import { Badge, Button, Card, Empty, Progress, Row, Screen, Txt } from '@/components/ui';
 import { C, S } from '@/constants/theme';
+import { usePermissoes } from '@/lib/conta';
 import { avesAtuais, avesPorGalinheiro } from '@/lib/calc';
 import { TIPOS_AVE } from '@/lib/constants';
 import { fmtNum } from '@/lib/format';
@@ -11,9 +12,10 @@ export default function Galinheiros() {
   const galinheiros = useStore((s) => s.galinheiros);
   const lotes = useStore((s) => s.lotes);
   const manejos = useStore((s) => s.manejos);
+  const { editarCadastros } = usePermissoes();
 
   return (
-    <Screen footer={<Button title="Novo galinheiro" icon="plus" onPress={() => router.push('/galinheiro/form')} />}>
+    <Screen footer={editarCadastros ? <Button title="Novo galinheiro" icon="plus" onPress={() => router.push('/galinheiro/form')} /> : undefined}>
       {galinheiros.length === 0 ? (
         <Empty icon="barn" title="Nenhum galinheiro ainda" text="Cadastre o primeiro para começar a organizar seus lotes." />
       ) : (

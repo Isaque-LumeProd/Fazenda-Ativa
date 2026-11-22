@@ -5,6 +5,7 @@ import { Button, Chips, Field, Screen } from '@/components/ui';
 import { CATEGORIAS_ITEM, UNIDADES } from '@/lib/constants';
 import { numParaTexto, parseNum } from '@/lib/format';
 import { voltar } from '@/lib/nav';
+import { useItem } from '@/lib/hooks';
 import { useStore } from '@/lib/store';
 import type { CategoriaItem, Unidade } from '@/lib/types';
 
@@ -18,7 +19,8 @@ const UNIDADE_PADRAO: Record<CategoriaItem, Unidade> = {
 
 export default function ItemForm() {
   const { id } = useLocalSearchParams<{ id?: string }>();
-  const existente = useStore((s) => s.itens.find((i) => i.id === id));
+  const existente = useItem(id);
+  const bruto = useStore((s) => s.itens.find((i) => i.id === id));
   const salvar = useStore((s) => s.salvarItem);
 
   const [nome, setNome] = useState(existente?.nome ?? '');
@@ -33,6 +35,7 @@ export default function ItemForm() {
 
   const nQtd = parseNum(qtd) ?? 0;
   const nMin = parseNum(minimo) ?? 0;
+  const nCusto = parseNum(custo) ?? undefined;
   const erroNome = !nome.trim() ? 'Informe um nome' : undefined;
 
   function onSalvar() {
@@ -43,9 +46,12 @@ export default function ItemForm() {
       nome: nome.trim(),
       categoria,
       unidade,
-      quantidade: existente ? existente.quantidade : nQtd,
+      quantidadeInicial: existente ? undefined : nQtd,
       estoqueMinimo: nMin,
-      custoUnitario: parseNum(custo) ?? undefined,
+      // Se o custo mudou na tela, ele passa a valer a partir de agora (até a próxima compra com valor)
+      ...(nCusto !== existente?.custoUnitario
+        ? { custoUnitario: nCusto, custoInformadoEm: new Date().toISOString() }
+        : { custoUnitario: bruto?.custoUnitario, custoInformadoEm: bruto?.custoInformadoEm }),
       pesoSacoKg: usaSaco ? (parseNum(saco) ?? undefined) : undefined,
     });
     voltar();

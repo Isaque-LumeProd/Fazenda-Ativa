@@ -4,6 +4,7 @@ import { irParaRegistro, ManejoItem } from '@/components/manejo-item';
 import { TarefaItem } from '@/components/tarefa-item';
 import { Badge, Button, Card, Empty, Grid, ListItem, Progress, Row, Screen, Section, Stat, Txt } from '@/components/ui';
 import { C, S } from '@/constants/theme';
+import { usePermissoes } from '@/lib/conta';
 import { avesAtuais, consumoDiarioKg, fmtIdade, idadeDias, ordenarManejos, somaPeriodo } from '@/lib/calc';
 import { TIPOS_AVE } from '@/lib/constants';
 import { fmtNum } from '@/lib/format';
@@ -15,6 +16,7 @@ export default function GalinheiroDetalhe() {
   const todosLotes = useStore((s) => s.lotes);
   const manejos = useStore((s) => s.manejos);
   const todasTarefas = useStore((s) => s.tarefas);
+  const { editarCadastros } = usePermissoes();
 
   if (!galinheiro) {
     return (
@@ -42,14 +44,16 @@ export default function GalinheiroDetalhe() {
       <Stack.Screen
         options={{
           title: galinheiro.nome,
-          headerRight: () => (
-            <Button
-              title="Editar"
-              variant="ghost"
-              small
-              onPress={() => router.push({ pathname: '/galinheiro/form', params: { id: galinheiro.id } })}
-            />
-          ),
+          headerRight: editarCadastros
+            ? () => (
+                <Button
+                  title="Editar"
+                  variant="ghost"
+                  small
+                  onPress={() => router.push({ pathname: '/galinheiro/form', params: { id: galinheiro.id } })}
+                />
+              )
+            : undefined,
         }}
       />
 
@@ -77,13 +81,15 @@ export default function GalinheiroDetalhe() {
       <Section
         title="Lotes"
         action={
-          <Button
-            title="Novo lote"
-            icon="plus"
-            variant="ghost"
-            small
-            onPress={() => router.push({ pathname: '/lote/form', params: { galinheiroId: galinheiro.id } })}
-          />
+          editarCadastros ? (
+            <Button
+              title="Novo lote"
+              icon="plus"
+              variant="ghost"
+              small
+              onPress={() => router.push({ pathname: '/lote/form', params: { galinheiroId: galinheiro.id } })}
+            />
+          ) : undefined
         }>
         {lotes.length === 0 ? (
           <Empty icon="bird" title="Nenhum lote" text="Um lote é um grupo de aves do mesmo tipo e idade." />

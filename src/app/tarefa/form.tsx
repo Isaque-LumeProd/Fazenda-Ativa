@@ -4,12 +4,14 @@ import { View } from 'react-native';
 
 import { Button, Chips, Field, Row, Screen, Txt } from '@/components/ui';
 import { C, S } from '@/constants/theme';
+import { usePermissoes } from '@/lib/conta';
 import { botaOvo } from '@/lib/calc';
 import { ORDEM_MANEJO, TIPOS_MANEJO } from '@/lib/constants';
 import { brParaYMD, fmtData, hoje } from '@/lib/dates';
 import { confirmar } from '@/lib/dialog';
 import { fmtQtd, numParaTexto, parseNum } from '@/lib/format';
 import { voltar } from '@/lib/nav';
+import { useItens } from '@/lib/hooks';
 import { useStore } from '@/lib/store';
 import type { TipoManejo } from '@/lib/types';
 
@@ -27,9 +29,10 @@ export default function TarefaForm() {
   const existente = useStore((s) => s.tarefas.find((t) => t.id === id));
   const galinheiros = useStore((s) => s.galinheiros);
   const lotes = useStore((s) => s.lotes);
-  const itens = useStore((s) => s.itens);
+  const itens = useItens();
   const salvar = useStore((s) => s.salvarTarefa);
   const excluir = useStore((s) => s.excluirTarefa);
+  const { apagar } = usePermissoes();
 
   const freqInicial = existente ? String(existente.frequenciaDias) : '1';
   const [tipo, setTipo] = useState<TipoManejo>(existente?.tipoManejo ?? 'agua');
@@ -108,7 +111,7 @@ export default function TarefaForm() {
           {existente ? (
             <Row gap={S.sm}>
               <Button title={existente.ativa ? 'Pausar' : 'Reativar'} variant="secondary" small style={{ flex: 1 }} onPress={alternar} />
-              <Button title="Excluir" variant="danger" small style={{ flex: 1 }} onPress={onExcluir} />
+              {apagar ? <Button title="Excluir" variant="danger" small style={{ flex: 1 }} onPress={onExcluir} /> : null}
             </Row>
           ) : null}
         </View>

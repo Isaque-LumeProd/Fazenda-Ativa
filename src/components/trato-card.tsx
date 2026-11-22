@@ -4,6 +4,7 @@ import { C, S } from '@/constants/theme';
 import { planoTrato } from '@/lib/calc';
 import { confirmar } from '@/lib/dialog';
 import { fmtNum } from '@/lib/format';
+import { useItens } from '@/lib/hooks';
 import { useStore } from '@/lib/store';
 
 import { Badge, Button, Card, Progress, Row, Txt } from './ui';
@@ -12,7 +13,7 @@ import { Badge, Button, Card, Progress, Row, Txt } from './ui';
 export function TratoCard({ grande = false }: { grande?: boolean }) {
   const lotes = useStore((s) => s.lotes);
   const manejos = useStore((s) => s.manejos);
-  const itens = useStore((s) => s.itens);
+  const itens = useItens();
   const baixar = useStore((s) => s.baixarTrato);
 
   const plano = planoTrato(lotes, manejos, itens);

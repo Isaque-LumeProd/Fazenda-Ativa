@@ -18,9 +18,11 @@ import {
   somaPeriodo,
   statusTarefa,
 } from '@/lib/calc';
+import { useConta, usePermissoes } from '@/lib/conta';
 import { TIPOS_MANEJO, type IconName } from '@/lib/constants';
 import { diaSemana, fmtData, hoje, saudacao } from '@/lib/dates';
 import { fmtMoeda, fmtNum, fmtPct } from '@/lib/format';
+import { useItens } from '@/lib/hooks';
 import { useStore } from '@/lib/store';
 import type { TipoManejo } from '@/lib/types';
 
@@ -30,9 +32,11 @@ export default function Inicio() {
   const galinheiros = useStore((s) => s.galinheiros);
   const lotes = useStore((s) => s.lotes);
   const manejos = useStore((s) => s.manejos);
-  const itens = useStore((s) => s.itens);
+  const itens = useItens();
   const tarefas = useStore((s) => s.tarefas);
   const carregarExemplo = useStore((s) => s.carregarExemplo);
+  const { editarCadastros } = usePermissoes();
+  const naNuvem = useConta((s) => s.modo === 'nuvem');
 
   if (galinheiros.length === 0) {
     return (
@@ -43,12 +47,18 @@ export default function Inicio() {
         </View>
         <Empty
           icon="barn"
-          title="Comece cadastrando um galinheiro"
-          text="Depois adicione os lotes de aves que vivem nele."
+          title={editarCadastros ? 'Comece cadastrando um galinheiro' : 'Nenhum galinheiro ainda'}
+          text={
+            editarCadastros
+              ? 'Depois adicione os lotes de aves que vivem nele.'
+              : 'O dono da fazenda ainda não cadastrou os galinheiros.'
+          }
           action={
             <View style={{ gap: S.sm, alignSelf: 'stretch', marginTop: S.sm }}>
-              <Button title="Cadastrar galinheiro" icon="plus" onPress={() => router.push('/galinheiro/form')} />
-              <Button title="Ver com dados de exemplo" variant="ghost" onPress={carregarExemplo} />
+              {editarCadastros ? (
+                <Button title="Cadastrar galinheiro" icon="plus" onPress={() => router.push('/galinheiro/form')} />
+              ) : null}
+              {!naNuvem ? <Button title="Ver com dados de exemplo" variant="ghost" onPress={carregarExemplo} /> : null}
             </View>
           }
         />

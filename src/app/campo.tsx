@@ -9,6 +9,7 @@ import { C, S } from '@/constants/theme';
 import { ordenarManejos, statusTarefa } from '@/lib/calc';
 import { TIPOS_MANEJO } from '@/lib/constants';
 import { diaSemana, fmtData, hoje } from '@/lib/dates';
+import { useItem } from '@/lib/hooks';
 import { useStore } from '@/lib/store';
 import type { Tarefa, TipoManejo } from '@/lib/types';
 
@@ -79,7 +80,7 @@ export default function ModoCampo() {
 function CampoTarefa({ tarefa }: { tarefa: Tarefa }) {
   const lote = useStore((s) => s.lotes.find((l) => l.id === tarefa.loteId));
   const galinheiro = useStore((s) => s.galinheiros.find((g) => g.id === tarefa.galinheiroId));
-  const item = useStore((s) => s.itens.find((i) => i.id === tarefa.itemId));
+  const item = useItem(tarefa.itemId);
   const concluir = useStore((s) => s.concluirTarefa);
   const cfg = TIPOS_MANEJO[tarefa.tipoManejo];
   const atrasada = statusTarefa(tarefa) === 'atrasada';

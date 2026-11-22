@@ -1,6 +1,6 @@
 import { TIPOS_AVE } from './constants';
 import { diffDias, hoje, ultimosDias } from './dates';
-import type { ItemEstoque, Lote, Manejo, Tarefa } from './types';
+import type { ItemComSaldo as ItemEstoque, Lote, Manejo, Tarefa } from './types';
 
 /** Aves atuais = inicial + entradas − mortalidade − vendas */
 export function avesAtuais(lote: Lote, manejos: Manejo[]): number {

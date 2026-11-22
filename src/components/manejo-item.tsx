@@ -1,10 +1,12 @@
 import { router } from 'expo-router';
 
 import { C } from '@/constants/theme';
+import { usePermissoes } from '@/lib/conta';
 import { TIPOS_MANEJO } from '@/lib/constants';
 import { rotuloDia } from '@/lib/dates';
 import { confirmar } from '@/lib/dialog';
 import { fmtMoeda, fmtQtd } from '@/lib/format';
+import { useItem } from '@/lib/hooks';
 import { useStore } from '@/lib/store';
 import type { Manejo } from '@/lib/types';
 
@@ -39,9 +41,10 @@ export function descreverManejo(m: Manejo, unidadeItem?: string, nomeDestino?: s
 export function ManejoItem({ manejo, mostrarAlvo = true }: { manejo: Manejo; mostrarAlvo?: boolean }) {
   const lote = useStore((s) => s.lotes.find((l) => l.id === manejo.loteId));
   const galinheiro = useStore((s) => s.galinheiros.find((g) => g.id === manejo.galinheiroId));
-  const item = useStore((s) => s.itens.find((i) => i.id === manejo.itemId));
+  const item = useItem(manejo.itemId);
   const destino = useStore((s) => s.lotes.find((l) => l.id === manejo.loteDestinoId));
   const excluir = useStore((s) => s.excluirManejo);
+  const { apagar } = usePermissoes();
   const cfg = TIPOS_MANEJO[manejo.tipo];
 
   const alvo = manejo.tipo === 'transferencia' ? `de ${lote?.nome ?? 'lote excluído'}` : (lote?.nome ?? galinheiro?.nome);
@@ -63,8 +66,8 @@ export function ManejoItem({ manejo, mostrarAlvo = true }: { manejo: Manejo; mos
       iconColor={cfg.cor}
       title={cfg.label}
       subtitle={subtitulo}
-      onPress={remover}
-      right={<Icon name="trash-can-outline" size={18} color={C.muted} />}
+      onPress={apagar ? remover : undefined}
+      right={apagar ? <Icon name="trash-can-outline" size={18} color={C.muted} /> : undefined}
     />
   );
 }

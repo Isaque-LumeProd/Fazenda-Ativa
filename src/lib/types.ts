@@ -68,12 +68,24 @@ export interface ItemEstoque {
   nome: string;
   categoria: CategoriaItem;
   unidade: Unidade;
-  quantidade: number;
   estoqueMinimo: number;
+  /** custo por unidade informado à mão no cadastro */
   custoUnitario?: number;
+  /** quando o custo foi informado à mão (ISO); compras mais novas passam a valer */
+  custoInformadoEm?: string;
   /** peso de um saco, em kg (ração) */
   pesoSacoKg?: number;
   criadoEm: string;
+}
+
+/**
+ * Item com o saldo calculado a partir das movimentações. O saldo nunca é gravado no item:
+ * assim, baixas feitas ao mesmo tempo em aparelhos diferentes somam em vez de se sobrescrever.
+ */
+export interface ItemComSaldo extends ItemEstoque {
+  quantidade: number;
+  /** custo atual: o da compra mais recente ou o informado à mão, o que for mais novo */
+  custoUnitario?: number;
 }
 
 export interface MovEstoque {

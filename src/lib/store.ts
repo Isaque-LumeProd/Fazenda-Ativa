@@ -5,11 +5,25 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { kgParaUnidade, planoTrato } from './calc';
 import { TIPOS_MANEJO } from './constants';
 import { addDias, hoje } from './dates';
+import { comSaldo, saldoDoItem } from './estoque';
 import { novoId } from './format';
 import { gerarExemplo } from './seed';
 import type { Galinheiro, ItemEstoque, Lote, Manejo, MovEstoque, Tarefa } from './types';
 
 type Novo<T> = Omit<T, 'id' | 'criadoEm'> & { id?: string };
+
+export const COLECOES = ['galinheiros', 'lotes', 'manejos', 'itens', 'movimentos', 'tarefas'] as const;
+export type Colecao = (typeof COLECOES)[number];
+
+/** Controle da sincronização com a nuvem (salvo junto com os dados) */
+export interface MetaSync {
+  /** fazenda à qual os dados deste aparelho pertencem; null = só neste aparelho */
+  fazendaId: string | null;
+  /** maior "rev" já recebido do servidor */
+  cursor: number;
+  /** "colecao:id" → marca da alteração ainda não enviada */
+  pendentes: Record<string, number>;
+}
 
 export interface Dados {
   galinheiros: Galinheiro[];
@@ -22,6 +36,7 @@ export interface Dados {
 
 interface Estado extends Dados {
   hidratado: boolean;
+  sync: MetaSync;
 
   salvarGalinheiro: (g: Novo<Galinheiro>) => string;
   excluirGalinheiro: (id: string) => void;
@@ -32,7 +47,8 @@ interface Estado extends Dados {
   registrarManejo: (m: Omit<Manejo, 'id' | 'criadoEm'>) => string;
   excluirManejo: (id: string) => void;
 
-  salvarItem: (i: Novo<ItemEstoque>) => string;
+  /** `quantidadeInicial` só vale para item novo (vira um ajuste de estoque) */
+  salvarItem: (i: Novo<ItemEstoque> & { quantidadeInicial?: number }) => string;
   excluirItem: (id: string) => void;
   entradaEstoque: (itemId: string, quantidade: number, custoTotal?: number) => void;
   ajustarEstoque: (itemId: string, novaQuantidade: number) => void;
@@ -51,7 +67,8 @@ interface Estado extends Dados {
   limparTudo: () => void;
 }
 
-const vazio: Dados = { galinheiros: [], lotes: [], manejos: [], itens: [], movimentos: [], tarefas: [] };
+export const vazio: Dados = { galinheiros: [], lotes: [], manejos: [], itens: [], movimentos: [], tarefas: [] };
+export const SYNC_VAZIO: MetaSync = { fazendaId: null, cursor: 0, pendentes: {} };
 
 function upsert<T extends { id: string; criadoEm: string }>(lista: T[], dado: Novo<T>): [T[], string] {
   if (dado.id && lista.some((x) => x.id === dado.id)) {
@@ -66,6 +83,7 @@ export const useStore = create<Estado>()(
     (set, get) => ({
       ...vazio,
       hidratado: false,
+      sync: SYNC_VAZIO,
 
       salvarGalinheiro: (g) => {
         const [galinheiros, id] = upsert(get().galinheiros, g);
@@ -105,9 +123,6 @@ export const useStore = create<Estado>()(
         const darBaixa = !!(m.itemId && m.quantidade && TIPOS_MANEJO[m.tipo].item);
         set({
           manejos: [...s.manejos, manejo],
-          itens: darBaixa
-            ? s.itens.map((i) => (i.id === m.itemId ? { ...i, quantidade: i.quantidade - (m.quantidade ?? 0) } : i))
-            : s.itens,
           movimentos: darBaixa
             ? [
                 ...s.movimentos,
@@ -127,19 +142,18 @@ export const useStore = create<Estado>()(
       },
       excluirManejo: (id) => {
         const s = get();
-        const mov = s.movimentos.find((x) => x.manejoId === id);
         set({
           manejos: s.manejos.filter((m) => m.id !== id),
           movimentos: s.movimentos.filter((x) => x.manejoId !== id),
-          itens: mov
-            ? s.itens.map((i) => (i.id === mov.itemId ? { ...i, quantidade: i.quantidade - mov.quantidade } : i))
-            : s.itens,
         });
       },
 
-      salvarItem: (i) => {
-        const [itens, id] = upsert(get().itens, i);
-        set({ itens });
+      salvarItem: ({ quantidadeInicial, ...i }) => {
+        const s = get();
+        const novo = !i.id || !s.itens.some((x) => x.id === i.id);
+        const [itens, id] = upsert(s.itens, i);
+        const movimentos = novo && quantidadeInicial ? [...s.movimentos, novoAjuste(id, quantidadeInicial)] : s.movimentos;
+        set({ itens, movimentos });
         return id;
       },
       excluirItem: (id) => {
@@ -155,15 +169,6 @@ export const useStore = create<Estado>()(
         const s = get();
         const agora = new Date().toISOString();
         set({
-          itens: s.itens.map((i) =>
-            i.id === itemId
-              ? {
-                  ...i,
-                  quantidade: i.quantidade + quantidade,
-                  custoUnitario: custoTotal && quantidade > 0 ? custoTotal / quantidade : i.custoUnitario,
-                }
-              : i,
-          ),
           movimentos: [
             ...s.movimentos,
             { id: novoId(), itemId, tipo: 'entrada', quantidade, data: hoje(), custoTotal, criadoEm: agora },
@@ -172,24 +177,10 @@ export const useStore = create<Estado>()(
       },
       ajustarEstoque: (itemId, novaQuantidade) => {
         const s = get();
-        const item = s.itens.find((i) => i.id === itemId);
-        if (!item) return;
-        const diff = novaQuantidade - item.quantidade;
+        if (!s.itens.some((i) => i.id === itemId)) return;
+        const diff = Math.round((novaQuantidade - saldoDoItem(itemId, s.movimentos)) * 1e6) / 1e6;
         if (diff === 0) return;
-        set({
-          itens: s.itens.map((i) => (i.id === itemId ? { ...i, quantidade: novaQuantidade } : i)),
-          movimentos: [
-            ...s.movimentos,
-            {
-              id: novoId(),
-              itemId,
-              tipo: 'ajuste',
-              quantidade: diff,
-              data: hoje(),
-              criadoEm: new Date().toISOString(),
-            },
-          ],
-        });
+        set({ movimentos: [...s.movimentos, novoAjuste(itemId, diff)] });
       },
 
       salvarTarefa: (t) => {
@@ -224,7 +215,7 @@ export const useStore = create<Estado>()(
 
       baixarTrato: (modo) => {
         const s = get();
-        const { linhas } = planoTrato(s.lotes, s.manejos, s.itens);
+        const { linhas } = planoTrato(s.lotes, s.manejos, comSaldo(s.itens, s.movimentos));
         let lotes = 0;
         let kg = 0;
         for (const l of linhas) {
@@ -253,14 +244,17 @@ export const useStore = create<Estado>()(
     }),
     {
       name: 'fazenda-ativa:v1',
+      version: 2,
       storage: createJSONStorage(() => AsyncStorage),
-      partialize: (s): Dados => ({
+      migrate: (salvo, versao) => migrar(salvo as Partial<Dados & { sync: MetaSync }>, versao),
+      partialize: (s): Dados & { sync: MetaSync } => ({
         galinheiros: s.galinheiros,
         lotes: s.lotes,
         manejos: s.manejos,
         itens: s.itens,
         movimentos: s.movimentos,
         tarefas: s.tarefas,
+        sync: s.sync,
       }),
       onRehydrateStorage: () => () => {
         useStore.setState({ hidratado: true });
@@ -268,3 +262,25 @@ export const useStore = create<Estado>()(
     },
   ),
 );
+
+function novoAjuste(itemId: string, quantidade: number): MovEstoque {
+  return { id: novoId(), itemId, tipo: 'ajuste', quantidade, data: hoje(), criadoEm: new Date().toISOString() };
+}
+
+/**
+ * v1 → v2: o saldo deixou de ficar gravado no item. Para cada item, a diferença entre o saldo
+ * antigo e a soma das movimentações vira um "ajuste", então nada muda para o usuário.
+ */
+function migrar(salvo: Partial<Dados & { sync: MetaSync }>, versao: number) {
+  const dados = { ...vazio, ...salvo };
+  if (versao < 2) {
+    const ajustes: MovEstoque[] = [];
+    dados.itens = (dados.itens as (ItemEstoque & { quantidade?: number })[]).map(({ quantidade, ...item }) => {
+      const diff = Math.round(((quantidade ?? 0) - saldoDoItem(item.id, dados.movimentos)) * 1e6) / 1e6;
+      if (diff !== 0) ajustes.push(novoAjuste(item.id, diff));
+      return item;
+    });
+    dados.movimentos = [...dados.movimentos, ...ajustes];
+  }
+  return { ...dados, sync: salvo.sync ?? SYNC_VAZIO };
+}

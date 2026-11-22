@@ -4,25 +4,28 @@ import { View } from 'react-native';
 
 import { Button, Card, Chips, Empty, Grid, ListItem, Row, Screen, Section, Stat, Txt, Field } from '@/components/ui';
 import { C, S } from '@/constants/theme';
+import { usePermissoes } from '@/lib/conta';
 import { consumoDaRacao, sacosRestantes } from '@/lib/calc';
 import { CATEGORIAS_ITEM } from '@/lib/constants';
 import { rotuloDia } from '@/lib/dates';
 import { avisar, confirmar } from '@/lib/dialog';
 import { fmtMoeda, fmtNum, fmtQtd, numParaTexto, parseNum } from '@/lib/format';
 import { voltar } from '@/lib/nav';
+import { useItem } from '@/lib/hooks';
 import { useStore } from '@/lib/store';
 
 type Acao = 'compra' | 'ajuste';
 
 export default function ItemDetalhe() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const item = useStore((s) => s.itens.find((i) => i.id === id));
+  const item = useItem(id);
   const todosMov = useStore((s) => s.movimentos);
   const lotes = useStore((s) => s.lotes);
   const manejos = useStore((s) => s.manejos);
   const entrada = useStore((s) => s.entradaEstoque);
   const ajustar = useStore((s) => s.ajustarEstoque);
   const excluir = useStore((s) => s.excluirItem);
+  const { editarCadastros, apagar } = usePermissoes();
 
   const [acao, setAcao] = useState<Acao>('compra');
   const [qtd, setQtd] = useState('');
@@ -76,14 +79,16 @@ export default function ItemDetalhe() {
       <Stack.Screen
         options={{
           title: item.nome,
-          headerRight: () => (
-            <Button
-              title="Editar"
-              variant="ghost"
-              small
-              onPress={() => router.push({ pathname: '/estoque/form', params: { id: item.id } })}
-            />
-          ),
+          headerRight: editarCadastros
+            ? () => (
+                <Button
+                  title="Editar"
+                  variant="ghost"
+                  small
+                  onPress={() => router.push({ pathname: '/estoque/form', params: { id: item.id } })}
+                />
+              )
+            : undefined,
         }}
       />
 
@@ -219,7 +224,7 @@ export default function ItemDetalhe() {
         )}
       </Section>
 
-      <Button title="Excluir item" variant="danger" icon="trash-can-outline" onPress={onExcluir} />
+      {apagar ? <Button title="Excluir item" variant="danger" icon="trash-can-outline" onPress={onExcluir} /> : null}
     </Screen>
   );
 }

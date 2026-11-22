@@ -15,9 +15,11 @@ import {
   ordenarManejos,
   ovosPorDia,
 } from '@/lib/calc';
+import { usePermissoes } from '@/lib/conta';
 import { TIPOS_AVE, TIPOS_MANEJO } from '@/lib/constants';
 import { diaSemana, fmtData } from '@/lib/dates';
 import { fmtNum, fmtPct, fmtQtd } from '@/lib/format';
+import { useItens } from '@/lib/hooks';
 import { useStore } from '@/lib/store';
 import type { TipoManejo } from '@/lib/types';
 
@@ -26,8 +28,9 @@ export default function LoteDetalhe() {
   const lote = useStore((s) => s.lotes.find((l) => l.id === id));
   const galinheiro = useStore((s) => s.galinheiros.find((g) => g.id === lote?.galinheiroId));
   const manejos = useStore((s) => s.manejos);
-  const itens = useStore((s) => s.itens);
+  const itens = useItens();
   const lotes = useStore((s) => s.lotes);
+  const { editarCadastros } = usePermissoes();
 
   if (!lote) {
     return (
@@ -58,14 +61,16 @@ export default function LoteDetalhe() {
       <Stack.Screen
         options={{
           title: lote.nome,
-          headerRight: () => (
-            <Button
-              title="Editar"
-              variant="ghost"
-              small
-              onPress={() => router.push({ pathname: '/lote/form', params: { id: lote.id } })}
-            />
-          ),
+          headerRight: editarCadastros
+            ? () => (
+                <Button
+                  title="Editar"
+                  variant="ghost"
+                  small
+                  onPress={() => router.push({ pathname: '/lote/form', params: { id: lote.id } })}
+                />
+              )
+            : undefined,
         }}
       />
 
@@ -94,7 +99,7 @@ export default function LoteDetalhe() {
             .join(' · ')}
           onPress={() => router.push({ pathname: '/estoque/[id]', params: { id: racao.id } })}
         />
-      ) : lote.ativo ? (
+      ) : lote.ativo && editarCadastros ? (
         <Banner
           icon="sack"
           tipo="info"

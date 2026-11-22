@@ -1,7 +1,8 @@
 import { router } from 'expo-router';
 import { Tabs } from 'expo-router/js-tabs';
-import { Pressable } from 'react-native';
+import { Pressable, View } from 'react-native';
 
+import { SyncIcone } from '@/components/sync-status';
 import { Icon } from '@/components/ui';
 import { C } from '@/constants/theme';
 import type { IconName } from '@/lib/constants';
@@ -28,9 +29,17 @@ export default function TabsLayout() {
           headerTitle: 'Fazenda Ativa',
           tabBarIcon: tabIcon('home-variant'),
           headerRight: () => (
-            <Pressable onPress={() => router.push('/config')} style={{ paddingHorizontal: 16 }} hitSlop={8}>
-              <Icon name="cog" color={C.muted} />
-            </Pressable>
+            <View style={{ flexDirection: 'row', alignItems: 'center', paddingRight: 8 }}>
+              <SyncIcone />
+              <Pressable
+                onPress={() => router.push('/config')}
+                style={{ paddingHorizontal: 8 }}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Configurações">
+                <Icon name="cog" color={C.muted} />
+              </Pressable>
+            </View>
           ),
         }}
       />

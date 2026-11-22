@@ -8,6 +8,7 @@ import {
   TextInput,
   View,
   type KeyboardTypeOptions,
+  type TextInputProps,
   type StyleProp,
   type TextStyle,
   type ViewStyle,
@@ -143,6 +144,9 @@ export function Field({
   suffix,
   hint,
   erro,
+  secureTextEntry,
+  autoCapitalize,
+  autoComplete,
 }: {
   label?: string;
   value: string;
@@ -153,6 +157,9 @@ export function Field({
   suffix?: string;
   hint?: string;
   erro?: string;
+  secureTextEntry?: boolean;
+  autoCapitalize?: TextInputProps['autoCapitalize'];
+  autoComplete?: TextInputProps['autoComplete'];
 }) {
   return (
     <View style={{ gap: S.xs }}>
@@ -165,6 +172,10 @@ export function Field({
           placeholderTextColor="#9AA096"
           keyboardType={keyboardType}
           multiline={multiline}
+          secureTextEntry={secureTextEntry}
+          autoCapitalize={autoCapitalize}
+          autoComplete={autoComplete}
+          accessibilityLabel={label}
           style={[st.input, multiline && { minHeight: 80, textAlignVertical: 'top' }]}
         />
         {suffix ? <Txt v="muted">{suffix}</Txt> : null}

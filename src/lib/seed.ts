@@ -1,6 +1,6 @@
 import { addDias, hoje } from './dates';
 import { novoId } from './format';
-import type { Galinheiro, ItemEstoque, Lote, Manejo, Tarefa } from './types';
+import type { Galinheiro, ItemEstoque, Lote, Manejo, MovEstoque, Tarefa } from './types';
 
 /** Dados fictícios para demonstração */
 export function gerarExemplo() {
@@ -63,7 +63,12 @@ export function gerarExemplo() {
     criadoEm: agora,
   };
 
-  const item = (i: Omit<ItemEstoque, 'id' | 'criadoEm'>): ItemEstoque => ({ ...i, id: novoId(), criadoEm: agora });
+  const movimentos: MovEstoque[] = [];
+  const item = ({ quantidade, ...i }: Omit<ItemEstoque, 'id' | 'criadoEm'> & { quantidade: number }): ItemEstoque => {
+    const id = novoId();
+    movimentos.push({ id: novoId(), itemId: id, tipo: 'ajuste', quantidade, data: addDias(h, -30), criadoEm: agora });
+    return { ...i, id, criadoEm: agora };
+  };
   const racaoPostura = item({ nome: 'Ração postura', categoria: 'racao', unidade: 'kg', quantidade: 480, estoqueMinimo: 150, custoUnitario: 2.4, pesoSacoKg: 40 });
   const racaoCresc = item({ nome: 'Ração crescimento (corte)', categoria: 'racao', unidade: 'kg', quantidade: 260, estoqueMinimo: 200, custoUnitario: 2.6, pesoSacoKg: 40 });
   const racaoInicial = item({ nome: 'Ração inicial (pintinho)', categoria: 'racao', unidade: 'kg', quantidade: 25, estoqueMinimo: 30, custoUnitario: 3.1, pesoSacoKg: 25 });
@@ -116,7 +121,7 @@ export function gerarExemplo() {
     lotes: [poedeiras, caipiras, frangos, pintinhos],
     manejos,
     itens: [racaoPostura, racaoCresc, racaoInicial, vitamina, vacina, cal],
-    movimentos: [],
+    movimentos,
     tarefas,
   };
 }

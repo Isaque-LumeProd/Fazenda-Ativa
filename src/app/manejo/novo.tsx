@@ -4,12 +4,14 @@ import { View } from 'react-native';
 
 import { Button, Card, Chips, Field, Row, Screen, Txt } from '@/components/ui';
 import { C, S } from '@/constants/theme';
+import { usePermissoes } from '@/lib/conta';
 import { avesAtuais, botaOvo, consumoDiarioKg } from '@/lib/calc';
 import { ORDEM_MANEJO, TIPOS_MANEJO } from '@/lib/constants';
 import { addDias, brParaYMD, fmtData, hoje } from '@/lib/dates';
 import { confirmar } from '@/lib/dialog';
 import { fmtNum, fmtQtd, numParaTexto, parseNum } from '@/lib/format';
 import { voltar } from '@/lib/nav';
+import { useItens } from '@/lib/hooks';
 import { useStore } from '@/lib/store';
 import type { TipoManejo } from '@/lib/types';
 
@@ -20,10 +22,11 @@ export default function NovoManejo() {
   const galinheiros = useStore((s) => s.galinheiros);
   const lotes = useStore((s) => s.lotes);
   const manejos = useStore((s) => s.manejos);
-  const itens = useStore((s) => s.itens);
+  const itens = useItens();
   const tarefa = useStore((s) => s.tarefas.find((t) => t.id === params.tarefaId));
   const registrar = useStore((s) => s.registrarManejo);
   const marcarFeita = useStore((s) => s.marcarTarefaFeita);
+  const { editarCadastros } = usePermissoes();
 
   const [tipo, setTipo] = useState<TipoManejo>(params.tipo ?? 'ovos');
   const [loteId, setLoteId] = useState(params.loteId);
@@ -186,13 +189,15 @@ export default function NovoManejo() {
             onChange={setLoteDestinoId}
           />
           {tentou && erros.destino ? <Txt v="small" style={{ color: C.danger }}>{erros.destino}</Txt> : null}
-          <Button
-            title="Criar lote de destino"
-            icon="plus"
-            variant="ghost"
-            small
-            onPress={() => router.push({ pathname: '/lote/form', params: lote ? { galinheiroId: lote.galinheiroId } : {} })}
-          />
+          {editarCadastros ? (
+            <Button
+              title="Criar lote de destino"
+              icon="plus"
+              variant="ghost"
+              small
+              onPress={() => router.push({ pathname: '/lote/form', params: lote ? { galinheiroId: lote.galinheiroId } : {} })}
+            />
+          ) : null}
         </View>
       )}
 

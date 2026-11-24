@@ -53,7 +53,8 @@ Barra inferior com 5 abas + telas empilhadas por cima.
 
 ## Próximas etapas
 
-1. Login e sincronização na nuvem (Supabase), com vários usuários por fazenda
-2. Notificações de tarefas no iPhone
-3. Financeiro (custo da ração por dúzia de ovos, receita de vendas)
-4. Relatórios em PDF
+Já prontos: login e sincronização na nuvem (Supabase), com vários usuários por fazenda. Ligar a um projeto real e publicar com EAS: veja [docs/NUVEM.md](NUVEM.md).
+
+1. Notificações de tarefas no iPhone
+2. Financeiro (custo da ração por dúzia de ovos, receita de vendas)
+3. Relatórios em PDF

@@ -44,7 +44,6 @@ export default function RootLayout() {
   const fazendaId = useConta((s) => s.fazenda?.id);
 
   const conectado = nuvemConfigurada && modo === 'nuvem' && !!userId && !!fazendaId;
-  const precisaConta = nuvemConfigurada && modo !== 'local' && !conectado;
   useSincronizacao(conectado && dadosProntos, fazendaId);
 
   if (!dadosProntos || !contaPronta) {
@@ -65,16 +64,12 @@ export default function RootLayout() {
           headerBackTitle: 'Voltar',
           contentStyle: { backgroundColor: C.bg },
         }}>
-        {/* Todas as telas do app ficam bloqueadas até entrar na conta (ou escolher usar sem conta). */}
-        <Stack.Protected guard={!precisaConta}>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false, title: 'Início' }} />
-          {TELAS_DO_APP.map((nome) => (
-            <Stack.Screen key={nome} name={nome} />
-          ))}
-        </Stack.Protected>
-        <Stack.Protected guard={precisaConta}>
-          <Stack.Screen name="conta" />
-        </Stack.Protected>
+        {/* Tela de login fora da entrada por enquanto: o app abre direto. A conta fica acessível em Configurações. */}
+        <Stack.Screen name="(tabs)" options={{ headerShown: false, title: 'Início' }} />
+        {TELAS_DO_APP.map((nome) => (
+          <Stack.Screen key={nome} name={nome} />
+        ))}
+        <Stack.Screen name="conta" />
       </Stack>
     </ThemeProvider>
   );

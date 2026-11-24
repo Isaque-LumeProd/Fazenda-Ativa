@@ -12,6 +12,7 @@
       "bundleIdentifier": "com.fazendaativa.app"
     },
     "android": {
+      "package": "com.fazendaativa.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

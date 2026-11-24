@@ -45,9 +45,38 @@ Em **Authentication → Sign In / Providers → Email**:
    EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
    ```
 
-3. Reinicie o app (`npx expo start`). Agora ele abre na tela de login.
+3. Reinicie o app (`npx expo start`). Por enquanto a tela de login não aparece na abertura: o app abre direto, e a conta fica em **Configurações → Criar conta ou entrar**.
 
-> O `.env.local` não vai para o Git. Para publicar (EAS), as mesmas variáveis precisam ser cadastradas no EAS. Isso entra na etapa de publicação.
+> O `.env.local` não vai para o Git. Para publicar (EAS), as mesmas variáveis precisam ser cadastradas no EAS.
+
+## Publicar com EAS
+
+O projeto já tem o `eas.json` com três perfis: `development` (app de desenvolvimento), `preview` (instalação interna para testes) e `production` (loja).
+
+1. Crie uma conta grátis em [expo.dev](https://expo.dev) e rode na pasta do projeto:
+
+   ```powershell
+   npx eas-cli@latest login
+   npx eas-cli@latest init
+   ```
+
+2. Cadastre as variáveis do Supabase no EAS, uma vez para cada ambiente (`development`, `preview` e `production`). Cada perfil de build usa o ambiente de mesmo nome:
+
+   ```powershell
+   npx eas-cli@latest env:create --name EXPO_PUBLIC_SUPABASE_URL --value https://SEU-PROJETO.supabase.co --environment preview --visibility plaintext
+   npx eas-cli@latest env:create --name EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY --value sb_publishable_... --environment preview --visibility plaintext
+   ```
+
+   Repita trocando `--environment preview` por `production` e por `development`. Esses valores entram no app no momento do build. Se mudarem, gere um build novo.
+
+3. Gere o build:
+
+   ```powershell
+   npx eas-cli@latest build --profile preview --platform ios
+   npx eas-cli@latest build --profile production --platform ios
+   ```
+
+   iPhone para uso real ou App Store exige conta do Apple Developer (paga). Para Android, o Google Play exige uma taxa única.
 
 ### 5. Primeiro uso
 
@@ -63,7 +92,7 @@ Em **Authentication → Sign In / Providers → Email**:
 
 **O código de convite vazou.** Em **Configurações**, toque em **Trocar código**. Quem já entrou continua; o código antigo para de funcionar.
 
-**Quero usar sem conta.** Na tela de login, toque em **"Usar sem conta"**. Dá para conectar depois em **Configurações → Criar conta ou entrar**, e os dados do aparelho podem ser enviados.
+**Quero usar sem conta.** Basta usar o app normalmente: os dados ficam no aparelho. Para conectar depois, vá em **Configurações → Criar conta ou entrar**, e os dados do aparelho podem ser enviados.
 
 ## Para desenvolvedores
 

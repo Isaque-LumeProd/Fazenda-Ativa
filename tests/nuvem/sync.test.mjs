@@ -76,7 +76,7 @@ const saldo = (d, id) => d.comSaldo(S(d).itens, S(d).movimentos).find((i) => i.i
 const pend = (d) => Object.keys(S(d).sync.pendentes).length;
 const assina = (d) =>
   JSON.stringify(
-    ['galinheiros', 'lotes', 'manejos', 'itens', 'movimentos', 'tarefas'].map((k) =>
+    ['galinheiros', 'lotes', 'manejos', 'itens', 'movimentos', 'tarefas', 'chocadas', 'eventosChocada', 'animais', 'eventosGado'].map((k) =>
       [...S(d)[k]].sort((x, y) => x.id.localeCompare(y.id)),
     ),
   );
@@ -101,7 +101,7 @@ a.sync.vincularFazenda(f, true);
 await a.sync.sincronizar();
 await a.sync.sincronizar();
 const noServidor = (await runAs(A, `select count(*)::int n from registros`)).data[0].n;
-const local = ['galinheiros', 'lotes', 'manejos', 'itens', 'movimentos', 'tarefas'].reduce((s, k) => s + S(a)[k].length, 0);
+const local = ['galinheiros', 'lotes', 'manejos', 'itens', 'movimentos', 'tarefas', 'chocadas', 'eventosChocada', 'animais', 'eventosGado'].reduce((s, k) => s + S(a)[k].length, 0);
 ok('A enviou todos os registros', noServidor === local && pend(a) === 0, `${noServidor}/${local}, pendentes ${pend(a)}`);
 ok('status ok', a.sync.useSyncStatus.getState().estado === 'ok');
 
@@ -110,6 +110,7 @@ S(b).carregarExemplo(); // lixo local que deve ser descartado
 b.sync.vincularFazenda(f, false);
 await b.sync.sincronizar();
 ok('B recebeu exatamente os dados de A', assina(a) === assina(b));
+ok('B recebeu chocadas e gado', S(b).chocadas.length === S(a).chocadas.length && S(b).animais.length > 0 && S(b).eventosGado.length === S(a).eventosGado.length, `${S(b).chocadas.length} chocadas, ${S(b).animais.length} animais`);
 
 // --- baixas de estoque simultâneas sem internet
 const racao = S(a).itens.find((i) => i.categoria === 'racao');

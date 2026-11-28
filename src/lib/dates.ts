@@ -72,3 +72,23 @@ export function saudacao(): string {
   if (h < 18) return 'Boa tarde';
   return 'Boa noite';
 }
+
+const DIAS_EXTENSO = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+
+/** "domingo, 4 de outubro" */
+export function dataExtenso(ymd: string): string {
+  const d = parseYMD(ymd);
+  return `${DIAS_EXTENSO[d.getDay()]}, ${d.getDate()} de ${MESES[d.getMonth()]}`;
+}
+
+/** "4 de out." */
+export function dataCurtaExtenso(ymd: string): string {
+  const d = parseYMD(ymd);
+  return `${d.getDate()} de ${MESES[d.getMonth()].slice(0, 3)}.`;
+}
+
+export function horaAtual(): string {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}

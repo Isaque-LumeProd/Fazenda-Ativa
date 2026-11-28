@@ -116,3 +116,146 @@ export interface Tarefa {
   ativa: boolean;
   criadoEm: string;
 }
+
+// ------------------------------------------------------------------ chocadas (incubação)
+
+export type EspecieId =
+  | 'galinha'
+  | 'codorna'
+  | 'pato'
+  | 'pato_crioulo'
+  | 'marreco'
+  | 'ganso'
+  | 'faisao'
+  | 'pavao'
+  | 'peru'
+  | 'angola'
+  | 'outra';
+
+export type StatusOvo = 'na' | 'fertil' | 'infertil' | 'duvidoso' | 'removido' | 'nascido' | 'morto';
+
+export interface OvoChocada {
+  status: StatusOvo;
+  /** ex.: A1, Matriz 02 */
+  ident?: string;
+  obs?: string;
+}
+
+/** automática: a chocadeira vira os ovos; manual: você vira; galinha: galinha choca */
+export type TipoChocadeira = 'automatica' | 'manual' | 'galinha';
+
+export interface Chocada {
+  id: string;
+  nome: string;
+  especie: EspecieId;
+  /** dias de incubação quando a espécie é "outra" */
+  diasCustom?: number;
+  /** YYYY-MM-DD: dia em que os ovos foram para a chocadeira (dia 1) */
+  dataInicio: string;
+  tipoChocadeira: TipoChocadeira;
+  /** HH:MM */
+  horariosViragem: string[];
+  ovos: OvoChocada[];
+  encerrada: boolean;
+  dataEncerramento?: string;
+  /** lote que recebeu os pintinhos nascidos */
+  loteDestinoId?: string;
+  observacoes?: string;
+  criadoEm: string;
+}
+
+/** tarefa: cuidado do calendário marcado como feito (ver `chave`) */
+export type TipoEventoChocada = 'viragem' | 'temperatura' | 'umidade' | 'imprevisto' | 'tarefa' | 'nota';
+
+export interface EventoChocada {
+  id: string;
+  chocadaId: string;
+  tipo: TipoEventoChocada;
+  /** YYYY-MM-DD */
+  data: string;
+  /** HH:MM */
+  hora: string;
+  /** °C ou % */
+  valor?: number;
+  /** id do imprevisto (ver IMPREVISTOS) */
+  imprevisto?: string;
+  /** tarefa feita: 'ovoscopia-7', 'fase-final', 'nascimento' */
+  chave?: string;
+  observacao?: string;
+  criadoEm: string;
+}
+
+// ------------------------------------------------------------------ gado
+
+export type Sexo = 'F' | 'M';
+
+export type CategoriaGado = 'bezerra' | 'bezerro' | 'novilha' | 'garrote' | 'vaca' | 'touro' | 'boi';
+
+export type Aptidao = 'corte' | 'leite' | 'misto';
+
+export interface Animal {
+  id: string;
+  /** número do brinco / identificação */
+  brinco: string;
+  nome?: string;
+  sexo: Sexo;
+  categoria: CategoriaGado;
+  raca?: string;
+  aptidao: Aptidao;
+  /** YYYY-MM-DD */
+  dataNascimento?: string;
+  /** YYYY-MM-DD: nascimento na fazenda ou data da compra */
+  dataEntrada: string;
+  origem: 'nascido' | 'comprado';
+  pesoEntradaKg?: number;
+  valorCompra?: number;
+  maeId?: string;
+  /** pasto / piquete / lote de manejo */
+  pasto?: string;
+  observacoes?: string;
+  criadoEm: string;
+}
+
+export type TipoEventoGado =
+  | 'pesagem'
+  | 'vacina'
+  | 'vermifugo'
+  | 'medicamento'
+  | 'cobertura'
+  | 'inseminacao'
+  | 'diagnostico'
+  | 'parto'
+  | 'secagem'
+  | 'pasto'
+  | 'venda'
+  | 'morte'
+  | 'nota';
+
+export interface EventoGado {
+  id: string;
+  animalId: string;
+  tipo: TipoEventoGado;
+  /** YYYY-MM-DD */
+  data: string;
+  pesoKg?: number;
+  /** item de estoque usado (vacina, vermífugo, medicamento) */
+  itemId?: string;
+  /** dose usada (na unidade do item) */
+  quantidade?: number;
+  /** nome do produto quando não há item de estoque */
+  produto?: string;
+  /** próxima dose / reforço (YYYY-MM-DD) */
+  proximaData?: string;
+  /** diagnóstico de prenhez */
+  resultado?: 'prenhe' | 'vazia';
+  /** touro / sêmen */
+  reprodutor?: string;
+  /** venda: valor total; compra de produto: custo */
+  valor?: number;
+  /** parto: bezerro cadastrado */
+  bezerroId?: string;
+  /** troca de pasto */
+  pasto?: string;
+  observacao?: string;
+  criadoEm: string;
+}

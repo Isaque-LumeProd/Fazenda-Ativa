@@ -40,7 +40,7 @@ export default function GalinheiroForm() {
     );
     if (ok) {
       excluir(existente.id);
-      router.dismissTo('/galinheiros');
+      router.dismissTo('/aves');
     }
   }
 

@@ -6,7 +6,8 @@
 -- Modelo:
 --   fazendas   uma fazenda (com código de convite)
 --   membros    quem participa de cada fazenda: 'dono' ou 'funcionario'
---   registros  todos os dados do app (galinheiros, lotes, manejos, itens, movimentos, tarefas)
+--   registros  todos os dados do app (galinheiros, lotes, manejos, itens, movimentos, tarefas,
+--              chocadas, eventos das chocadas, animais e eventos do gado)
 --              guardados como JSON, um por linha. Exclusão vira "excluido = true" para que os
 --              outros aparelhos fiquem sabendo. "rev" cresce a cada mudança e é usado para
 --              baixar só o que mudou desde a última sincronização.
@@ -35,7 +36,7 @@ create sequence if not exists public.registros_rev;
 
 create table if not exists public.registros (
   fazenda_id uuid not null references public.fazendas (id) on delete cascade,
-  colecao text not null check (colecao in ('galinheiros', 'lotes', 'manejos', 'itens', 'movimentos', 'tarefas')),
+  colecao text not null,
   id text not null check (length(id) between 1 and 64),
   dados jsonb not null default '{}'::jsonb,
   excluido boolean not null default false,
@@ -45,6 +46,14 @@ create table if not exists public.registros (
   primary key (fazenda_id, colecao, id)
 );
 create index if not exists registros_rev_idx on public.registros (fazenda_id, rev);
+
+-- Coleções aceitas. Recriada a cada execução para que bancos antigos ganhem as coleções novas
+-- (chocadas e gado) sem precisar apagar nada.
+alter table public.registros drop constraint if exists registros_colecao_check;
+alter table public.registros add constraint registros_colecao_check check (colecao in (
+    'galinheiros', 'lotes', 'manejos', 'itens', 'movimentos', 'tarefas',
+    'chocadas', 'eventosChocada', 'animais', 'eventosGado'
+  ));
 
 -- Toda alteração ganha um "rev" novo, carimbo de hora do servidor e autor.
 create or replace function public.registros_carimbar()
@@ -88,8 +97,9 @@ as $$
   select exists (select 1 from public.membros where fazenda_id = f and user_id = auth.uid());
 $$;
 
--- Dono pode tudo. Funcionário registra manejos, movimentos de estoque e tarefas, mas não apaga
--- nada e não altera galinheiros, lotes nem itens de estoque.
+-- Dono pode tudo. Funcionário registra manejos, movimentos de estoque, tarefas, cuidados das
+-- chocadas (viragem, umidade, ovoscopia) e eventos do gado, mas não apaga nada e não altera
+-- galinheiros, lotes, itens de estoque nem o cadastro dos animais.
 create or replace function public.pode_gravar(f uuid, c text, exc boolean)
 returns boolean
 language sql
@@ -99,7 +109,7 @@ set search_path = ''
 as $$
   select case public.meu_papel(f)
     when 'dono' then true
-    when 'funcionario' then c in ('manejos', 'movimentos', 'tarefas') and not exc
+    when 'funcionario' then c in ('manejos', 'movimentos', 'tarefas', 'chocadas', 'eventosChocada', 'eventosGado') and not exc
     else false
   end;
 $$;

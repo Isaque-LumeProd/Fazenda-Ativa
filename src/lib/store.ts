@@ -8,11 +8,34 @@ import { addDias, hoje } from './dates';
 import { comSaldo, saldoDoItem } from './estoque';
 import { novoId } from './format';
 import { gerarExemplo } from './seed';
-import type { Galinheiro, ItemEstoque, Lote, Manejo, MovEstoque, Tarefa } from './types';
+import type {
+  Animal,
+  Chocada,
+  EventoChocada,
+  EventoGado,
+  Galinheiro,
+  ItemEstoque,
+  Lote,
+  Manejo,
+  MovEstoque,
+  OvoChocada,
+  Tarefa,
+} from './types';
 
 type Novo<T> = Omit<T, 'id' | 'criadoEm'> & { id?: string };
 
-export const COLECOES = ['galinheiros', 'lotes', 'manejos', 'itens', 'movimentos', 'tarefas'] as const;
+export const COLECOES = [
+  'galinheiros',
+  'lotes',
+  'manejos',
+  'itens',
+  'movimentos',
+  'tarefas',
+  'chocadas',
+  'eventosChocada',
+  'animais',
+  'eventosGado',
+] as const;
 export type Colecao = (typeof COLECOES)[number];
 
 /** Controle da sincronização com a nuvem (salvo junto com os dados) */
@@ -32,6 +55,10 @@ export interface Dados {
   itens: ItemEstoque[];
   movimentos: MovEstoque[];
   tarefas: Tarefa[];
+  chocadas: Chocada[];
+  eventosChocada: EventoChocada[];
+  animais: Animal[];
+  eventosGado: EventoGado[];
 }
 
 interface Estado extends Dados {
@@ -63,11 +90,38 @@ interface Estado extends Dados {
   /** Dá baixa da ração de todos os lotes ativos: meio trato ou o que falta do dia */
   baixarTrato: (modo: 'meio' | 'restante') => { lotes: number; kg: number };
 
+  salvarChocada: (c: Novo<Chocada>) => string;
+  excluirChocada: (id: string) => void;
+  /** Troca o estado de um ovo da bandeja */
+  salvarOvo: (chocadaId: string, indice: number, ovo: OvoChocada) => void;
+  /** Muda a quantidade de ovos mantendo os já avaliados */
+  definirQtdOvos: (chocadaId: string, qtd: number) => void;
+  marcarTodosFerteis: (chocadaId: string) => void;
+  registrarEventoChocada: (e: Omit<EventoChocada, 'id' | 'criadoEm'>) => string;
+  excluirEventoChocada: (id: string) => void;
+
+  salvarAnimal: (a: Novo<Animal>) => string;
+  excluirAnimal: (id: string) => void;
+  /** Registra o evento; vacina/vermífugo/medicamento com item e dose dão baixa no estoque */
+  registrarEventoGado: (e: Omit<EventoGado, 'id' | 'criadoEm'>) => string;
+  excluirEventoGado: (id: string) => void;
+
   carregarExemplo: () => void;
   limparTudo: () => void;
 }
 
-export const vazio: Dados = { galinheiros: [], lotes: [], manejos: [], itens: [], movimentos: [], tarefas: [] };
+export const vazio: Dados = {
+  galinheiros: [],
+  lotes: [],
+  manejos: [],
+  itens: [],
+  movimentos: [],
+  tarefas: [],
+  chocadas: [],
+  eventosChocada: [],
+  animais: [],
+  eventosGado: [],
+};
 export const SYNC_VAZIO: MetaSync = { fazendaId: null, cursor: 0, pendentes: {} };
 
 function upsert<T extends { id: string; criadoEm: string }>(lista: T[], dado: Novo<T>): [T[], string] {
@@ -162,6 +216,7 @@ export const useStore = create<Estado>()(
           itens: s.itens.filter((i) => i.id !== id),
           movimentos: s.movimentos.filter((m) => m.itemId !== id),
           manejos: s.manejos.map((m) => (m.itemId === id ? { ...m, itemId: undefined } : m)),
+          eventosGado: s.eventosGado.map((e) => (e.itemId === id ? { ...e, itemId: undefined } : e)),
           tarefas: s.tarefas.map((t) => (t.itemId === id ? { ...t, itemId: undefined } : t)),
         });
       },
@@ -239,12 +294,96 @@ export const useStore = create<Estado>()(
         return { lotes, kg };
       },
 
+      salvarChocada: (c) => {
+        const [chocadas, id] = upsert(get().chocadas, c);
+        set({ chocadas });
+        return id;
+      },
+      excluirChocada: (id) => {
+        const s = get();
+        set({
+          chocadas: s.chocadas.filter((c) => c.id !== id),
+          eventosChocada: s.eventosChocada.filter((e) => e.chocadaId !== id),
+        });
+      },
+      salvarOvo: (chocadaId, indice, ovo) => {
+        set({
+          chocadas: get().chocadas.map((c) =>
+            c.id === chocadaId ? { ...c, ovos: c.ovos.map((o, i) => (i === indice ? ovo : o)) } : c,
+          ),
+        });
+      },
+      definirQtdOvos: (chocadaId, qtd) => {
+        const n = Math.max(1, Math.min(500, Math.round(qtd)));
+        set({
+          chocadas: get().chocadas.map((c) => {
+            if (c.id !== chocadaId) return c;
+            const ovos = c.ovos.slice(0, n);
+            while (ovos.length < n) ovos.push({ status: 'na' });
+            return { ...c, ovos };
+          }),
+        });
+      },
+      marcarTodosFerteis: (chocadaId) => {
+        set({
+          chocadas: get().chocadas.map((c) =>
+            c.id === chocadaId
+              ? { ...c, ovos: c.ovos.map((o) => (o.status === 'na' ? { ...o, status: 'fertil' as const } : o)) }
+              : c,
+          ),
+        });
+      },
+      registrarEventoChocada: (e) => {
+        const id = novoId();
+        set({ eventosChocada: [...get().eventosChocada, { ...e, id, criadoEm: new Date().toISOString() }] });
+        return id;
+      },
+      excluirEventoChocada: (id) => set({ eventosChocada: get().eventosChocada.filter((e) => e.id !== id) }),
+
+      salvarAnimal: (a) => {
+        const [animais, id] = upsert(get().animais, a);
+        set({ animais });
+        return id;
+      },
+      excluirAnimal: (id) => {
+        const s = get();
+        const evIds = new Set(s.eventosGado.filter((e) => e.animalId === id).map((e) => e.id));
+        set({
+          animais: s.animais.map((a) => (a.maeId === id ? { ...a, maeId: undefined } : a)).filter((a) => a.id !== id),
+          eventosGado: s.eventosGado.filter((e) => e.animalId !== id),
+          movimentos: s.movimentos.filter((m) => !(m.manejoId && evIds.has(m.manejoId))),
+        });
+      },
+      registrarEventoGado: (e) => {
+        const s = get();
+        const id = novoId();
+        const agora = new Date().toISOString();
+        const darBaixa = !!(e.itemId && e.quantidade && ['vacina', 'vermifugo', 'medicamento'].includes(e.tipo));
+        set({
+          eventosGado: [...s.eventosGado, { ...e, id, criadoEm: agora }],
+          movimentos: darBaixa
+            ? [
+                ...s.movimentos,
+                { id: novoId(), itemId: e.itemId!, tipo: 'saida', quantidade: -(e.quantidade ?? 0), data: e.data, manejoId: id, criadoEm: agora },
+              ]
+            : s.movimentos,
+        });
+        return id;
+      },
+      excluirEventoGado: (id) => {
+        const s = get();
+        set({
+          eventosGado: s.eventosGado.filter((e) => e.id !== id),
+          movimentos: s.movimentos.filter((m) => m.manejoId !== id),
+        });
+      },
+
       carregarExemplo: () => set(gerarExemplo()),
       limparTudo: () => set(vazio),
     }),
     {
       name: 'fazenda-ativa:v1',
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => AsyncStorage),
       migrate: (salvo, versao) => migrar(salvo as Partial<Dados & { sync: MetaSync }>, versao),
       partialize: (s): Dados & { sync: MetaSync } => ({
@@ -254,6 +393,10 @@ export const useStore = create<Estado>()(
         itens: s.itens,
         movimentos: s.movimentos,
         tarefas: s.tarefas,
+        chocadas: s.chocadas,
+        eventosChocada: s.eventosChocada,
+        animais: s.animais,
+        eventosGado: s.eventosGado,
         sync: s.sync,
       }),
       onRehydrateStorage: () => () => {
@@ -268,6 +411,8 @@ function novoAjuste(itemId: string, quantidade: number): MovEstoque {
 }
 
 /**
+ * v2 → v3: chocadas e gado são coleções novas e começam vazias (`{ ...vazio, ...salvo }`).
+ *
  * v1 → v2: o saldo deixou de ficar gravado no item. Para cada item, a diferença entre o saldo
  * antigo e a soma das movimentações vira um "ajuste", então nada muda para o usuário.
  */

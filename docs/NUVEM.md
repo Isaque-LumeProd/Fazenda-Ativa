@@ -7,7 +7,7 @@ Com a nuvem ligada, cada pessoa entra com e-mail e senha e todos da fazenda veem
 | Quem | Pode fazer |
 | --- | --- |
 | **Dono** (quem cria a fazenda) | Tudo: cadastrar, editar e apagar galinheiros, lotes, itens, registros e tarefas; convidar e remover funcionários |
-| **Funcionário** (entra com código de convite) | Registrar manejos, trato do dia, compras, ajustes de estoque e concluir/criar tarefas. Não apaga nada e não altera galinheiros, lotes nem itens |
+| **Funcionário** (entra com código de convite) | Registrar manejos, trato do dia, compras, ajustes de estoque, concluir/criar tarefas, cuidar das chocadas (viragem, umidade, ovoscopia) e registrar eventos do gado (pesagem, vacina…). Não apaga nada e não altera galinheiros, lotes, itens nem o cadastro dos animais |
 
 Essas regras são garantidas **no servidor** (arquivo [`supabase/schema.sql`](../supabase/schema.sql)), não só escondendo botões no app.
 
@@ -26,7 +26,7 @@ Essas regras são garantidas **no servidor** (arquivo [`supabase/schema.sql`](..
 ### 2. Criar as tabelas e regras
 
 1. No menu da esquerda, abra **SQL Editor** → **New query**.
-2. Cole o conteúdo inteiro de [`supabase/schema.sql`](../supabase/schema.sql) e clique em **Run**. Deve aparecer "Success".
+2. Cole o conteúdo inteiro de [`supabase/schema.sql`](../supabase/schema.sql) e clique em **Run**. Deve aparecer "Success". **Quem já tinha o banco criado** precisa rodar o arquivo de novo uma vez: ele libera as coleções novas (chocadas e gado) sem apagar nada.
 
 ### 3. Ajustar o login
 

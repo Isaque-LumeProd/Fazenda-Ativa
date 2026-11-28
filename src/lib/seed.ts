@@ -1,6 +1,18 @@
 import { addDias, hoje } from './dates';
 import { novoId } from './format';
-import type { Galinheiro, ItemEstoque, Lote, Manejo, MovEstoque, Tarefa } from './types';
+import type {
+  Animal,
+  Chocada,
+  EventoChocada,
+  EventoGado,
+  Galinheiro,
+  ItemEstoque,
+  Lote,
+  Manejo,
+  MovEstoque,
+  OvoChocada,
+  Tarefa,
+} from './types';
 
 /** Dados fictícios para demonstração */
 export function gerarExemplo() {
@@ -116,7 +128,88 @@ export function gerarExemplo() {
     tarefa({ titulo: 'Limpeza do pinteiro', tipoManejo: 'limpeza', galinheiroId: g3.id, frequenciaDias: 7, proximaData: addDias(h, 2) }),
   ];
 
+  // ---------------------------------------------------------------- chocadas
+  const ovos = (n: number, f: (i: number) => OvoChocada['status']): OvoChocada[] =>
+    Array.from({ length: n }, (_, i) => ({ status: f(i) }));
+  const caipirasSitio: Chocada = {
+    id: novoId(),
+    nome: 'Caipiras do Sítio',
+    especie: 'galinha',
+    dataInicio: addDias(h, -8),
+    tipoChocadeira: 'manual',
+    horariosViragem: ['08:00', '14:00', '20:00'],
+    ovos: ovos(12, (i) => (i === 3 || i === 9 ? 'infertil' : i === 6 ? 'duvidoso' : 'fertil')),
+    encerrada: false,
+    criadoEm: agora,
+  };
+  const patos: Chocada = {
+    id: novoId(),
+    nome: 'Patos crioulos',
+    especie: 'pato_crioulo',
+    dataInicio: addDias(h, -2),
+    tipoChocadeira: 'automatica',
+    horariosViragem: ['08:00', '14:00', '20:00'],
+    ovos: ovos(8, () => 'na'),
+    encerrada: false,
+    criadoEm: agora,
+  };
+  const codornas: Chocada = {
+    id: novoId(),
+    nome: 'Codornas de setembro',
+    especie: 'codorna',
+    dataInicio: addDias(h, -40),
+    tipoChocadeira: 'automatica',
+    horariosViragem: ['08:00', '14:00', '20:00'],
+    ovos: ovos(30, (i) => (i < 24 ? 'nascido' : i < 27 ? 'infertil' : 'morto')),
+    encerrada: true,
+    dataEncerramento: addDias(h, -22),
+    criadoEm: agora,
+  };
+  const evC = (e: Omit<EventoChocada, 'id' | 'criadoEm'>): EventoChocada => ({ ...e, id: novoId(), criadoEm: agora });
+  const eventosChocada: EventoChocada[] = [];
+  for (let i = 1; i <= 7; i++) {
+    const d = addDias(h, -i);
+    for (const hora of ['08:00', '14:00', '20:00']) eventosChocada.push(evC({ chocadaId: caipirasSitio.id, tipo: 'viragem', data: d, hora }));
+    eventosChocada.push(evC({ chocadaId: caipirasSitio.id, tipo: 'umidade', data: d, hora: '09:05', valor: 52 + (i % 3) }));
+    eventosChocada.push(evC({ chocadaId: caipirasSitio.id, tipo: 'temperatura', data: d, hora: '09:06', valor: 37.6 + (i % 2) / 10 }));
+  }
+  eventosChocada.push(evC({ chocadaId: caipirasSitio.id, tipo: 'tarefa', chave: 'ovoscopia-7', data: addDias(h, -1), hora: '18:30' }));
+  eventosChocada.push(evC({ chocadaId: caipirasSitio.id, tipo: 'viragem', data: h, hora: '08:02' }));
+  eventosChocada.push(evC({ chocadaId: caipirasSitio.id, tipo: 'imprevisto', imprevisto: 'energia', data: addDias(h, -5), hora: '21:40', observacao: 'Voltou em 2 horas' }));
+  eventosChocada.push(evC({ chocadaId: patos.id, tipo: 'umidade', data: addDias(h, -1), hora: '09:10', valor: 58 }));
+
+  // ---------------------------------------------------------------- gado
+  const animal = (a: Omit<Animal, 'id' | 'criadoEm'>): Animal => ({ ...a, id: novoId(), criadoEm: agora });
+  const mimosa = animal({ brinco: '012', nome: 'Mimosa', sexo: 'F', categoria: 'vaca', raca: 'Girolando', aptidao: 'leite', dataNascimento: addDias(h, -6 * 365), dataEntrada: addDias(h, -3 * 365), origem: 'comprado', pesoEntradaKg: 470, valorCompra: 6500, pasto: 'Pasto da Represa' });
+  const estrela = animal({ brinco: '027', nome: 'Estrela', sexo: 'F', categoria: 'vaca', raca: 'Nelore', aptidao: 'corte', dataNascimento: addDias(h, -5 * 365), dataEntrada: addDias(h, -2 * 365), origem: 'comprado', pesoEntradaKg: 430, pasto: 'Pasto da Represa' });
+  const pintada = animal({ brinco: '031', sexo: 'F', categoria: 'novilha', raca: 'Girolando', aptidao: 'leite', dataNascimento: addDias(h, -22 * 30), dataEntrada: addDias(h, -22 * 30), origem: 'nascido', maeId: mimosa.id, pesoEntradaKg: 32, pasto: 'Piquete 2' });
+  const trovao = animal({ brinco: '001', nome: 'Trovão', sexo: 'M', categoria: 'touro', raca: 'Nelore', aptidao: 'corte', dataNascimento: addDias(h, -4 * 365), dataEntrada: addDias(h, -3 * 365), origem: 'comprado', pesoEntradaKg: 620, valorCompra: 12000, pasto: 'Pasto da Represa' });
+  const bezerro = animal({ brinco: '045', sexo: 'M', categoria: 'bezerro', raca: 'Nelore', aptidao: 'corte', dataNascimento: addDias(h, -150), dataEntrada: addDias(h, -150), origem: 'nascido', maeId: estrela.id, pesoEntradaKg: 31, pasto: 'Piquete 2' });
+  const garrote = animal({ brinco: '039', sexo: 'M', categoria: 'garrote', raca: 'Mestiço / Cruzado', aptidao: 'corte', dataNascimento: addDias(h, -14 * 30), dataEntrada: addDias(h, -200), origem: 'comprado', pesoEntradaKg: 210, valorCompra: 2300, pasto: 'Piquete 2' });
+  const evG = (e: Omit<EventoGado, 'id' | 'criadoEm'>): EventoGado => ({ ...e, id: novoId(), criadoEm: agora });
+  const eventosGado: EventoGado[] = [
+    evG({ animalId: mimosa.id, tipo: 'inseminacao', data: addDias(h, -190), reprodutor: 'Sêmen Gir Leiteiro' }),
+    evG({ animalId: mimosa.id, tipo: 'diagnostico', data: addDias(h, -140), resultado: 'prenhe' }),
+    evG({ animalId: mimosa.id, tipo: 'pesagem', data: addDias(h, -30), pesoKg: 520 }),
+    evG({ animalId: estrela.id, tipo: 'cobertura', data: addDias(h, -20), reprodutor: 'Brinco 001 · Trovão' }),
+    evG({ animalId: estrela.id, tipo: 'parto', data: addDias(h, -150), observacao: 'Parto normal' }),
+    evG({ animalId: bezerro.id, tipo: 'pesagem', data: addDias(h, -90), pesoKg: 88 }),
+    evG({ animalId: bezerro.id, tipo: 'pesagem', data: addDias(h, -30), pesoKg: 142 }),
+    evG({ animalId: garrote.id, tipo: 'pesagem', data: addDias(h, -100), pesoKg: 262 }),
+    evG({ animalId: garrote.id, tipo: 'pesagem', data: addDias(h, -10), pesoKg: 331 }),
+    evG({ animalId: pintada.id, tipo: 'pesagem', data: addDias(h, -15), pesoKg: 318 }),
+    evG({ animalId: pintada.id, tipo: 'vacina', data: addDias(h, -400), produto: 'Brucelose (B19)' }),
+  ];
+  for (const a of [mimosa, estrela, pintada, trovao, bezerro, garrote]) {
+    eventosGado.push(evG({ animalId: a.id, tipo: 'vermifugo', data: addDias(h, -90), produto: 'Ivermectina 1%', proximaData: h }));
+  }
+  eventosGado.push(evG({ animalId: bezerro.id, tipo: 'vacina', data: addDias(h, -25), produto: 'Clostridioses', proximaData: addDias(h, 5) }));
+
   return {
+    chocadas: [caipirasSitio, patos, codornas],
+    eventosChocada,
+    animais: [mimosa, estrela, pintada, trovao, bezerro, garrote],
+    eventosGado,
     galinheiros: [g1, g2, g3],
     lotes: [poedeiras, caipiras, frangos, pintinhos],
     manejos,
